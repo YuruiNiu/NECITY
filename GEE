@@ -1,0 +1,190 @@
+////Add two variables vs(wind spped) $ tdmean
+var GRIDMET_vs=GRIDMET.select('vs')
+var PRISM_tdmean=PRISM.select('tdmean')
+
+// generize the lat and lon
+var getCentroid = function(feature) {
+  var centroid = feature.geometry().centroid().coordinates(); 
+  var lon=ee.Number(centroid.get(0));
+  var lat=ee.Number(centroid.get(1));
+  return ee.Feature(feature).set('lon', lon).set('lat', lat);
+};
+
+var wkt = ' \
+  PROJCS["World_Mollweide", \
+    GEOGCS["GCS_WGS_1984", \
+      DATUM["WGS_1984", \
+        SPHEROID["WGS_1984",6378137,298.257223563]], \
+      PRIMEM["Greenwich",0], \
+      UNIT["Degree",0.017453292519943295]], \
+    PROJECTION["Mollweide"], \
+    PARAMETER["False_Easting",0], \
+    PARAMETER["False_Northing",0], \
+    PARAMETER["Central_Meridian",0], \
+    UNIT["Meter",1], \
+    AUTHORITY["EPSG","54009"]]';
+    var equalArea_proj_globe = ee.Projection(wkt);
+var band_list=['srad','vp','tmax','tmin'] 
+band_list=ee.List(band_list)
+
+////GRIDMET---------DAILY--------------------------
+// GRIDMET_vs=GRIDMET_vs.filter(ee.Filter.calendarRange(2000,2021,'year')).filter(ee.Filter.calendarRange(6,8,'month'))
+// for (var i=0;i<6;i++){
+// var city_fishnet=ee.FeatureCollection('users/leco/NEcity_FID'+i+'_fishnet')
+// var city_fishnet_geo=city_fishnet.map(getCentroid); 
+// var GRIDMET_vs_band=GRIDMET_vs.toBands()
+// var fCol2 = GRIDMET_vs_band
+//               .reduceRegions({
+//                 reducer: ee.Reducer.mean(),
+//                 collection:ee.FeatureCollection(city_fishnet_geo),
+//                 crs:equalArea_proj_globe,
+//                 scale: 1000
+//               });
+// Export.table.toDrive({ 
+//   collection: fCol2,
+//   description: 'NEcity_FID'+i+'_GRIDMET_vs_ALL_daily',
+//   folder:"sy",
+//   fileFormat:'csv'
+// });
+// }
+
+////GRIDMET---------MONTH--------------------------
+// GRIDMET=GRIDMET.filter(ee.Filter.calendarRange(2000,2021,'year')).filter(ee.Filter.calendarRange(6,8,'month'))
+// for (var i=0;i<6;i++){
+// var city_fishnet=ee.FeatureCollection('users/leco/NEcity_FID'+i+'_fishnet')
+// var city_fishnet_geo=city_fishnet.map(getCentroid); 
+// for (var year=2020;year<2022;year++){
+//   var GRIDMET_year=GRIDMET_vs.filter(ee.Filter.calendarRange(year,year,'year'))
+//   for (var month=6;month<9;month++){
+//     var GRIDMET_month=GRIDMET_year.filter(ee.Filter.calendarRange(month,month,'month'))
+//     var newname=ee.String(ee.Number(year)).cat(ee.String(ee.Number(month)))
+//     var GRIDMET_month_mean=GRIDMET_month.mean()
+//     var GRIDMET_month_mean=GRIDMET_month_mean//.set('year-month',newname)
+//     var fCol2 = GRIDMET_month_mean.reduceRegions({
+//                 reducer: ee.Reducer.mean(),
+//                 collection:ee.FeatureCollection(city_fishnet_geo),
+//                 crs:equalArea_proj_globe,
+//                 scale: 1000
+//               });
+//     Export.table.toDrive({ 
+//     collection: fCol2,
+//     description: 'NEcity_FID'+i+'_'+year+'_'+month+'_GRIDMET_vs',
+//     folder:"sy",
+//     fileFormat:'csv'
+//   });
+//   }
+// }
+// }
+    
+////PRISM_tdmean---------DAILY--------------------------
+PRISM_tdmean=PRISM_tdmean.filter(ee.Filter.calendarRange(2011,2021,'year')).filter(ee.Filter.calendarRange(5,8,'month'))
+for (var i=0;i<6;i++){
+var city_fishnet=ee.FeatureCollection('users/leco/NEcity_FID'+i+'_fishnet')
+var city_fishnet_geo=city_fishnet.map(getCentroid); 
+var PRISM_tdmean_band=PRISM_tdmean.toBands()
+var fCol2 = PRISM_tdmean_band
+              .reduceRegions({
+                reducer: ee.Reducer.mean(),
+                collection:ee.FeatureCollection(city_fishnet_geo),
+                crs:equalArea_proj_globe,
+                scale: 1000
+              });
+Export.table.toDrive({ 
+  collection: fCol2,
+  description: 'NEcity_FID'+i+'_PRISM_tdmean_ALL_daily',
+  folder:"sy",
+  fileFormat:'csv'
+});
+}  
+
+////PRISM_tdmean---------MONTH--------------------------
+// for (var i=0;i<6;i++){
+// var city_fishnet=ee.FeatureCollection('users/leco/NEcity_FID'+i+'_fishnet')
+// var city_fishnet_geo=city_fishnet.map(getCentroid);
+// for (var year=2020;year<2022;year++){
+//   var PRISM_tdmean_year=GRIDMET_vs.filter(ee.Filter.calendarRange(year,year,'year'))
+//   for (var month=6;month<9;month++){
+//     var PRISM_tdmean_month=GRIDMET_year.filter(ee.Filter.calendarRange(month,month,'month'))
+//     var newname=ee.String(ee.Number(year)).cat(ee.String(ee.Number(month)))
+//     var PRISM_tdmean_month_mean=GRIDMET_month.mean()
+//     var PRISM_tdmean_month_mean=GRIDMET_month_mean//.set('year-month',newname)
+//     var fCol2 = PRISM_tdmean_month_mean.reduceRegions({
+//                 reducer: ee.Reducer.mean(),
+//                 collection:ee.FeatureCollection(city_fishnet_geo),
+//                 crs:equalArea_proj_globe,
+//                 scale: 1000
+//               });
+//     Export.table.toDrive({ 
+//     collection: fCol2,
+//     description: 'NEcity_FID'+i+'_'+year+'_'+month+'_PRISM_tdmean',
+//     folder:"sy",
+//     fileFormat:'csv'
+//   });
+//   }
+// }
+// }
+
+////////  DAYMET_V4----------------------------------------------
+// DAYMET_V4=DAYMET_V4.filter(ee.Filter.calendarRange(2020,2021,'year')).filter(ee.Filter.calendarRange(6,8,'month'))
+// /////////DAYMET_V4------------------------------
+// for (var i=0;i<6;i++){
+// var city_fishnet=ee.FeatureCollection('users/leco/NEcity_FID'+i+'_fishnet')
+// for (var j=0;j<4;j++){
+//   var bandname=ee.String(band_list.get(j)).getInfo()
+//     var DAYMET_V4_band=DAYMET_V4.select(bandname).toBands() 
+//     print(DAYMET_V4_band,'DAYMET_V4_band')
+//   var fCol = DAYMET_V4_band
+//               .reduceRegions({
+//                 reducer: ee.Reducer.mean(),
+//                 collection:ee.FeatureCollection(city_fishnet),
+//                 crs:equalArea_proj_globe,
+//                 scale: 1000
+//               });
+// Export.table.toDrive({ 
+//   collection: fCol,
+//   description: 'NEcity_FID'+i+'_band_'+bandname,
+//   folder:"sy",
+//   fileFormat:'csv'
+// });
+// }
+// }
+
+/////////impervious------------------------------
+// for (var i=0;i<6;i++){
+// var city_fishnet=ee.FeatureCollection('users/leco/NEcity_FID'+i+'_fishnet')
+// var fCol2 = impervious
+//               .reduceRegions({
+//                 reducer: ee.Reducer.mean(),
+//                 collection:ee.FeatureCollection(city_fishnet),
+//                 crs:equalArea_proj_globe,
+//                 scale: 30
+//               });
+// Export.table.toDrive({ 
+//   collection: fCol2,
+//   description: 'NEcity_FID'+i+'impervious',
+//   folder:"sy",
+//   fileFormat:'csv'
+// });
+// }
+
+
+
+////GRIDMET-----------------------------------
+PRISM_tdmean=PRISM_tdmean.filter(ee.Filter.calendarRange(2020,2021,'year')).filter(ee.Filter.calendarRange(6,8,'month'))
+print(PRISM_tdmean)
+// for (var i=0;i<6;i++){
+// var city_fishnet=ee.FeatureCollection('users/leco/NEcity_FID'+i+'_fishnet')
+// var fCol2 = PRISM_tdmean
+//               .reduceRegions({
+//                 reducer: ee.Reducer.mean(),
+//                 collection:ee.FeatureCollection(city_fishnet),
+//                 crs:equalArea_proj_globe,
+//                 scale: 1000
+//               });
+// Export.table.toDrive({ 
+//   collection: fCol2,
+//   description: 'NEcity_FID'+i+'impervious',
+//   folder:"sy",
+//   fileFormat:'csv'
+// });
+// }
